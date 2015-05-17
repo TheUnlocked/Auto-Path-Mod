@@ -1,0 +1,441 @@
+package io.github.theunlocked.auto_paths;
+
+import io.github.theunlocked.stuff_things.blocks.*;
+import io.github.theunlocked.stuff_things.entity.EntitySuperFire;
+import io.github.theunlocked.stuff_things.forceField.FFBarrier;
+import io.github.theunlocked.stuff_things.forceField.FFBoundaryPillar;
+import io.github.theunlocked.stuff_things.items.*;
+import io.github.theunlocked.stuff_things.lib.ProxyCommon;
+import io.github.theunlocked.stuff_things.lib.References;
+import io.github.theunlocked.stuff_things.modSupport.ModIntegration;
+import scala.Int;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.entity.RenderSnowball;
+import net.minecraft.client.renderer.entity.RenderTNTPrimed;
+import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
+import net.minecraft.item.ItemArmor.ArmorMaterial;
+import net.minecraft.item.ItemFlintAndSteel;
+import net.minecraft.item.ItemFood;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item.ToolMaterial;
+import net.minecraft.item.ItemSword;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.stats.Achievement;
+import net.minecraft.stats.AchievementList;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IIcon;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.util.EnumHelper;
+import net.minecraftforge.oredict.OreDictionary;
+import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.Mod.Instance;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLLoadEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.LanguageRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
+@Mod(modid = References.MODID, version = References.VERSION, dependencies = "required-after:FML;after:Thaumcraft;after:Baubles;after:ThermalExpansion")
+public class StuffAndThingsMod
+{
+	
+	
+    @SidedProxy(clientSide = References.Client,
+    		serverSide = References.Common)
+    public static ProxyCommon proxy;
+    
+    @Instance(References.MODID)
+	public static AutoPaths instance;
+    	
+    //Config Data
+    	public static int diamondCost;
+    	public static int stickCost;
+    	public static int starCost;
+    	public static int bookCost;
+    	public static int obsidianCost;
+    	public static int hedCost;
+    		
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+    	
+    	modIntegration.preInit(event);
+    	
+        Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+
+        config.load();
+
+        diamondCost = config.get("Magic Table", "diamond to soulGem cost", 20).getInt();
+        stickCost = config.get("Magic Table", "stick to magicStick cost", 5).getInt();
+        starCost = config.get("Magic Table", "soulStar to netherStar cost", 50).getInt();
+        bookCost = config.get("Magic Table", "book to enchBook cost", 1).getInt();
+        obsidianCost = config.get("Magic Table", "obsidian to magicObsidian cost", 8).getInt();
+        hedCost = config.get("Magic Table", "100mb HED cost", 20).getInt();
+
+        config.save();
+        
+        //MinecraftForge.EVENT_BUS.register(new DemonWings());
+        MinecraftForge.EVENT_BUS.register(new AutoPaths());
+        AutoPaths.preInit();
+}
+
+    
+    	
+    @EventHandler
+    public void init(FMLInitializationEvent event)
+    {
+    	
+    	modIntegration.init(event);
+    	
+    	proxy.registerRenderInformation();
+    	OreDictionary.registerOre("materialRubber", glue);
+    	
+    	
+    	this.addRecipes();
+    }
+    
+    @EventHandler
+    public void load(FMLLoadEvent event)
+    {
+    	modIntegration.load(event);
+    }
+	public StuffAndThingsMod(){
+		
+    	//Item Registry
+    		//GameReg
+    			GameRegistry.registerItem(hed, "hed");
+    			GameRegistry.registerItem(netherCore, "nether_core");
+    			GameRegistry.registerItem(superTool, "super_tool");
+    			GameRegistry.registerItem(magnetOfSuck, "magnet_of_suck0");
+    			GameRegistry.registerItem(magnetOfSuckW, "magnet_of_suck1");
+    			GameRegistry.registerItem(magnetOfSuckB, "magnet_of_suck2");
+    			GameRegistry.registerItem(rainStick, "rain_stick");
+    			GameRegistry.registerItem(diviningRod, "divining_rod");
+    			GameRegistry.registerItem(wandOfSquirt, "wand_of_squirt");
+    			GameRegistry.registerItem(ductTape, "duct_tape");
+    			GameRegistry.registerItem(glue, "glue");
+    			GameRegistry.registerItem(stickyPearl, "sticky_pearl");
+    			GameRegistry.registerItem(returnTicket, "return_ticket");
+    			
+    			GameRegistry.registerItem(demonWings, "demon_wings");
+    			
+    			GameRegistry.registerItem(gold, "gold_amp");
+    			GameRegistry.registerItem(emerald, "emerald_amp");
+    			GameRegistry.registerItem(diamond, "diamond_amp");
+    			GameRegistry.registerItem(obsidian, "obsidian_amp");
+    			GameRegistry.registerItem(redstone, "redstone_amp");
+    			GameRegistry.registerItem(lapis, "lapis_amp");
+    			
+    			GameRegistry.registerItem(superHandle, "super_handle");
+    			GameRegistry.registerItem(superBlade, "super_blade");
+    			GameRegistry.registerItem(superEdge, "super_edge");
+    			
+    			//GameRegistry.registerItem(sl1pg8rShirt, "sl1pg8r_shirt");
+    			
+    			GameRegistry.registerItem(superToolMissile, "NONAME0");
+    			
+    			GameRegistry.registerItem(spiritGem, "soul_gem");
+    			GameRegistry.registerItem(magicStick, "magic_stick");
+    			GameRegistry.registerItem(spiritStar, "soul_star");
+    			
+    			GameRegistry.registerItem(starSword, "star_sword");
+    			GameRegistry.registerItem(redstoneSword, "redstone_sword");
+    			GameRegistry.registerItem(lapisSword, "lapis_sword");
+    			GameRegistry.registerItem(goldSword, "gold_sword");
+    			GameRegistry.registerItem(emeraldSword, "emerald_sword");
+    			GameRegistry.registerItem(diamondSword, "diamond_sword");
+    			GameRegistry.registerItem(obsidianSword, "obsidian_sword");
+    			
+    			GameRegistry.registerItem(starAxe, "star_Axe");
+    			GameRegistry.registerItem(redstoneAxe, "redstone_Axe");
+    			GameRegistry.registerItem(lapisAxe, "lapis_Axe");
+    			GameRegistry.registerItem(goldAxe, "gold_Axe");
+    			GameRegistry.registerItem(emeraldAxe, "emerald_Axe");
+    			GameRegistry.registerItem(diamondAxe, "diamond_Axe");
+    			GameRegistry.registerItem(obsidianAxe, "obsidian_Axe");
+    			
+    			GameRegistry.registerItem(starPickaxe, "star_Pickaxe");
+    			GameRegistry.registerItem(redstonePickaxe, "redstone_Pickaxe");
+    			GameRegistry.registerItem(lapisPickaxe, "lapis_Pickaxe");
+    			GameRegistry.registerItem(goldPickaxe, "gold_Pickaxe");
+    			GameRegistry.registerItem(emeraldPickaxe, "emerald_Pickaxe");
+    			GameRegistry.registerItem(diamondPickaxe, "diamond_Pickaxe");
+    			GameRegistry.registerItem(obsidianPickaxe, "obsidian_Pickaxe");
+    			
+    			GameRegistry.registerItem(starShovel, "star_Shovel");
+    			GameRegistry.registerItem(redstoneShovel, "redstone_Shovel");
+    			GameRegistry.registerItem(lapisShovel, "lapis_Shovel");
+    			GameRegistry.registerItem(goldShovel, "gold_Shovel");
+    			GameRegistry.registerItem(emeraldShovel, "emerald_Shovel");
+    			GameRegistry.registerItem(diamondShovel, "diamond_Shovel");
+    			GameRegistry.registerItem(obsidianShovel, "obsidian_Shovel");
+    			
+    			GameRegistry.registerItem(starHoe, "star_Hoe");
+    			GameRegistry.registerItem(redstoneHoe, "redstone_Hoe");
+    			GameRegistry.registerItem(lapisHoe, "lapis_Hoe");
+    			GameRegistry.registerItem(goldHoe, "gold_Hoe");
+    			GameRegistry.registerItem(emeraldHoe, "emerald_Hoe");
+    			GameRegistry.registerItem(diamondHoe, "diamond_Hoe");
+    			GameRegistry.registerItem(obsidianHoe, "obsidian_Hoe");
+
+    		//LangReg
+    			
+    			LanguageRegistry.addName(superTool, "Super Tool");
+    			LanguageRegistry.addName(hed, "Handheld Enrichment Device (HED)");
+    			LanguageRegistry.addName(netherCore, "Nether Core");
+    			LanguageRegistry.addName(magnetOfSuck, "Magnet of Suck");
+    			LanguageRegistry.addName(magnetOfSuckB, "Magnet of Suck (Blacklisted)");
+    			LanguageRegistry.addName(magnetOfSuckW, "Magnet of Suck (Whitelisted)");
+    			LanguageRegistry.addName(rainStick, "Rain Stick");
+    			LanguageRegistry.addName(diviningRod, "Divining Rod");
+    			LanguageRegistry.addName(wandOfSquirt, "Wand of Squirt");
+    			LanguageRegistry.addName(glue, "Glue");
+    			LanguageRegistry.addName(ductTape, "Duct Tape");
+    			LanguageRegistry.addName(stickyPearl, "Sticky Pearl");
+    			LanguageRegistry.addName(returnTicket, "Return Ticket");
+    			
+    			LanguageRegistry.addName(spiritGem, "Soul Gem");
+    			LanguageRegistry.addName(magicStick, "Magical Stick");
+    			LanguageRegistry.addName(spiritStar, "Soul Star");
+    			
+    			LanguageRegistry.addName(superHandle, "Super Tool Handle");
+    			LanguageRegistry.addName(superBlade, "Super Tool Blade");
+    			LanguageRegistry.addName(superEdge, "Super Tool Cutting Edge");
+    			
+    			LanguageRegistry.addName(gold, "Amplified Gold Ingot");
+    			LanguageRegistry.addName(lapis, "Amplified Lapis Lazuli");
+    			LanguageRegistry.addName(emerald, "Amplified Emerald");
+    			LanguageRegistry.addName(diamond, "Amplified Diamond");
+    			LanguageRegistry.addName(obsidian, "Amplified Chunk of Obsidian");
+    			LanguageRegistry.addName(redstone, "Amplified Redstone Dust");
+    			
+    			LanguageRegistry.addName(starSword, "Star Blade");
+    			LanguageRegistry.addName(redstoneSword, "Amplified Redstone Sword");
+    			LanguageRegistry.addName(lapisSword, "Amplified Lapis Sword");
+    			LanguageRegistry.addName(goldSword, "Amplified Gold Sword");
+    			LanguageRegistry.addName(emeraldSword, "Amplified Emerald Sword");
+    			LanguageRegistry.addName(diamondSword, "Amplified Diamond Sword");
+    			LanguageRegistry.addName(obsidianSword, "Amplified Obsidian Sword");
+    			
+    			LanguageRegistry.addName(starAxe, "Star Axe");
+    			LanguageRegistry.addName(redstoneAxe, "Amplified Redstone Axe");
+    			LanguageRegistry.addName(lapisAxe, "Amplified Lapis Axe");
+    			LanguageRegistry.addName(goldAxe, "Amplified Gold Axe");
+    			LanguageRegistry.addName(emeraldAxe, "Amplified Emerald Axe");
+    			LanguageRegistry.addName(diamondAxe, "Amplified Diamond Axe");
+    			LanguageRegistry.addName(obsidianAxe, "Amplified Obsidian Axe");
+    			
+    			LanguageRegistry.addName(starShovel, "Star Spade");
+    			LanguageRegistry.addName(redstoneShovel, "Amplified Redstone Shovel");
+    			LanguageRegistry.addName(lapisShovel, "Amplified Lapis Shovel");
+    			LanguageRegistry.addName(goldShovel, "Amplified Gold Shovel");
+    			LanguageRegistry.addName(emeraldShovel, "Amplified Emerald Shovel");
+    			LanguageRegistry.addName(diamondShovel, "Amplified Diamond Shovel");
+    			LanguageRegistry.addName(obsidianShovel, "Amplified Obsidian Shovel");
+
+    			LanguageRegistry.addName(starPickaxe, "Star Pick");
+    			LanguageRegistry.addName(redstonePickaxe, "Amplified Redstone Pickaxe");
+    			LanguageRegistry.addName(lapisPickaxe, "Amplified Lapis Pickaxe");
+    			LanguageRegistry.addName(goldPickaxe, "Amplified Gold Pickaxe");
+    			LanguageRegistry.addName(emeraldPickaxe, "Amplified Emerald Pickaxe");
+    			LanguageRegistry.addName(diamondPickaxe, "Amplified Diamond Pickaxe");
+    			LanguageRegistry.addName(obsidianPickaxe, "Amplified Obsidian Pickaxe");
+    			
+    			LanguageRegistry.addName(starHoe, "Star Scythe");
+    			LanguageRegistry.addName(redstoneHoe, "Amplified Redstone Hoe");
+    			LanguageRegistry.addName(lapisHoe, "Amplified Lapis Hoe");
+    			LanguageRegistry.addName(goldHoe, "Amplified Gold Hoe");
+    			LanguageRegistry.addName(emeraldHoe, "Amplified Emerald Hoe");
+    			LanguageRegistry.addName(diamondHoe, "Amplified Diamond Hoe");
+    			LanguageRegistry.addName(obsidianHoe, "Amplified Obsidian Hoe");
+    			
+    			
+    			
+		//Block Registry
+			//GameReg
+				GameRegistry.registerBlock(enrichedLapis, "amp_lapis");
+				GameRegistry.registerBlock(enrichedRedstone, "amp_redstone");
+				GameRegistry.registerBlock(enrichedObsidian, "amp_obsisian");
+				GameRegistry.registerBlock(enrichedDiamond, "amp_diamond");
+				GameRegistry.registerBlock(enrichedEmerald, "amp_emerald");
+				GameRegistry.registerBlock(enrichedGold, "amp_gold");
+				GameRegistry.registerBlock(magicTable, "magic_table");
+				GameRegistry.registerBlock(magicObsidian, "magic_obsidian");
+				//GameRegistry.registerBlock(carpenterTest, "carpenter_test");
+				
+				GameRegistry.registerBlock(ffBoundaryPillar, "ff_boundary_pillar");
+				GameRegistry.registerBlock(ffBoundaryPillarConnected, "ff_boundary_pillar_connected");
+				GameRegistry.registerBlock(ffBarrier, "ff_barrier");
+				
+				
+			//LangReg
+				LanguageRegistry.addName(enrichedLapis, "Amplified Lapis Lazuli Block");
+				LanguageRegistry.addName(enrichedRedstone, "Block of Amplified Redstone");
+				LanguageRegistry.addName(enrichedObsidian, "Amplified Obsidian Block");
+				LanguageRegistry.addName(enrichedEmerald, "Block of Amplified Emerald");
+				LanguageRegistry.addName(enrichedGold, "Block of Amplified Gold");
+				LanguageRegistry.addName(enrichedDiamond, "Block of Amplified Diamond");
+				LanguageRegistry.addName(magicTable, "Magical Table");
+				LanguageRegistry.addName(magicObsidian, "Magical Obsidian");
+				
+		//Generic Language Registry
+			LanguageRegistry.instance().addStringLocalization("death.attack.forcefield", "%1$s thought they could get through a forcefield!");
+				
+    }
+
+	public void addRecipes() {
+    	
+		//Shapeless Crafting
+		GameRegistry.addShapelessRecipe(new ItemStack(stickyPearl, 2), new ItemStack (Items.slime_ball), new ItemStack (Items.ender_pearl));
+		
+		GameRegistry.addShapelessRecipe(new ItemStack(Items.diamond, 64), new ItemStack (Blocks.planks, 1, OreDictionary.WILDCARD_VALUE));
+		
+    	//Shaped Crafting
+		
+    	GameRegistry.addShapedRecipe(new ItemStack (netherCore), "GSG", "SDS",
+    			"GSG", 'D', Items.nether_star, 'G', Blocks.gold_block , 'S', Items.diamond);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (spiritStar), "DGD", "GSG",
+    			"DGD", 'S', netherCore.setContainerItem(netherCore), 'G', Items.gold_ingot , 'D', spiritGem);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (hed), "#B#", "RCR",
+    			"BBB", 'R', Blocks.redstone_block, 'B', Blocks.iron_block , 'C', netherCore);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (wandOfSquirt), "#GE", "#SG",
+    			"S##", 'G', spiritGem, 'S', magicStick , 'E', Items.emerald);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (rainStick), "##T", "#S#",
+    			"G##", 'G', Items.gold_ingot, 'S', magicStick , 'T', Items.ghast_tear);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (magnetOfSuck), "E#R", "N#N",
+    			"#N#", 'E', Items.ender_pearl, 'R', Items.redstone , 'N', Items.iron_ingot);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (diviningRod), "##G", "#S#",
+    			"S##", 'G', spiritGem, 'S', magicStick);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (ductTape), "PPP", "GGG",
+    			'G', glue, 'P', Items.paper);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (magicObsidian), "#B#", "BOB",
+    			"#B#", 'B', Items.enchanted_book, 'O', Blocks.obsidian);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (magicTable), "#C#", "DOD",
+    			"OOO", 'C', Blocks.crafting_table, 'O', magicObsidian, 'D', Items.diamond);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (superHandle), "L", "L",
+    			"L", 'L', enrichedLapis);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (superBlade), "R", "B",
+    			"B", 'B', enrichedRedstone, 'R', redstone);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (superEdge), "#D", "OG",
+    			'O', enrichedObsidian, 'D', enrichedDiamond, 'G', enrichedGold);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (superTool), "EBE", "#H#", "#M#", 
+    			'E', superEdge, 'B', superBlade, 'H', superHandle, 'M', enrichedEmerald);
+    	
+    	
+    	// And now... THE BULK CRAFTING! (beware)
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianPickaxe), "HHH", "#S#", "#S#", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianSword), "H", "H", "S", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianAxe), "HH", "HS", "#S", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianAxe), "HH", "SH", "S#", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianHoe), "HH", "S#", "S#", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianHoe), "HH", "#S", "#S", 'H', obsidian, 'S', Items.bone);
+    	GameRegistry.addShapedRecipe(new ItemStack(obsidianShovel), "H", "S", "S", 'H', obsidian, 'S', Items.bone);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondPickaxe), "HHH", "#S#", "#S#", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondSword), "H", "H", "S", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondAxe), "HH", "HS", "#S", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondAxe), "HH", "SH", "S#", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondHoe), "HH", "S#", "S#", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondHoe), "HH", "#S", "#S", 'H', diamond, 'S', Items.coal);
+    	GameRegistry.addShapedRecipe(new ItemStack(diamondShovel), "H", "S", "S", 'H', diamond, 'S', Items.coal);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(redstonePickaxe), "HHH", "#S#", "#S#", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneSword), "H", "H", "S", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneAxe), "HH", "HS", "#S", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneAxe), "HH", "SH", "S#", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneHoe), "HH", "S#", "S#", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneHoe), "HH", "#S", "#S", 'H', redstone, 'S', Items.iron_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(redstoneShovel), "H", "S", "S", 'H', redstone, 'S', Items.iron_ingot);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldPickaxe), "HHH", "#S#", "#S#", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldSword), "H", "H", "S", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldAxe), "HH", "HS", "#S", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldAxe), "HH", "SH", "S#", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldHoe), "HH", "S#", "S#", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldHoe), "HH", "#S", "#S", 'H', emerald, 'S', Items.gold_ingot);
+    	GameRegistry.addShapedRecipe(new ItemStack(emeraldShovel), "H", "S", "S", 'H', emerald, 'S', Items.gold_ingot);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(goldPickaxe), "HHH", "#S#", "#S#", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldSword), "H", "H", "S", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldAxe), "HH", "HS", "#S", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldAxe), "HH", "SH", "S#", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldHoe), "HH", "S#", "S#", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldHoe), "HH", "#S", "#S", 'H', gold, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(goldShovel), "H", "S", "S", 'H', gold, 'S', magicStick);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisPickaxe), "HHH", "#S#", "#S#", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisSword), "H", "H", "S", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisAxe), "HH", "HS", "#S", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisAxe), "HH", "SH", "S#", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisHoe), "HH", "S#", "S#", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisHoe), "HH", "#S", "#S", 'H', lapis, 'S', magicStick);
+    	GameRegistry.addShapedRecipe(new ItemStack(lapisShovel), "H", "S", "S", 'H', lapis, 'S', magicStick);
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack(starPickaxe), "HHH", "#S#", "#S#", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starSword), "H", "H", "S", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starAxe), "HH", "HS", "#S", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starAxe), "HH", "SH", "S#", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starHoe), "HH", "S#", "S#", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starHoe), "HH", "#S", "#S", 'H', Items.nether_star, 'S', Items.quartz);
+    	GameRegistry.addShapedRecipe(new ItemStack(starShovel), "H", "S", "S", 'H', Items.nether_star, 'S', Items.quartz);
+    	
+    	//GameRegistry.addShapedRecipe(new ItemStack (sl1pg8rShirt), "L#L", "LBL",
+    			//"LLL", 'L', new ItemStack (Blocks.wool, 1, 11), 'B',  new ItemStack (Blocks.wool, 1, 15));
+    	
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedRedstone), "TTT", "TTT", "TTT", 'T', redstone);
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedLapis), "TTT", "TTT", "TTT", 'T', lapis);
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedGold), "TTT", "TTT", "TTT", 'T', gold);
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedDiamond), "TTT", "TTT", "TTT", 'T', diamond);
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedEmerald), "TTT", "TTT", "TTT", 'T', emerald);
+    	GameRegistry.addShapedRecipe(new ItemStack (enrichedObsidian), "TTT", "TTT", "TTT", 'T', obsidian);
+    	
+    	GameRegistry.addShapelessRecipe(new ItemStack (redstone, 9), new ItemStack(enrichedRedstone));
+    	GameRegistry.addShapelessRecipe(new ItemStack (lapis, 9), new ItemStack(enrichedLapis));
+    	GameRegistry.addShapelessRecipe(new ItemStack (gold, 9), new ItemStack(enrichedGold));
+    	GameRegistry.addShapelessRecipe(new ItemStack (diamond, 9), new ItemStack(enrichedDiamond));
+    	GameRegistry.addShapelessRecipe(new ItemStack (emerald, 9), new ItemStack(enrichedEmerald));
+    	GameRegistry.addShapelessRecipe(new ItemStack (obsidian, 9), new ItemStack(enrichedObsidian));
+
+    	//Smelting
+    	GameRegistry.addSmelting(Items.bone, new ItemStack (glue, 1), 0f);
+    	
+    	//IRecipe
+    	GameRegistry.addRecipe(new HEDStarRecipe());
+    	GameRegistry.addRecipe(new MagnetSuckRecipe());
+    	GameRegistry.addRecipe(new MagnetSuckListRecipe());
+    	GameRegistry.addRecipe(new DuctTapeRecipe());
+    	
+
+	}	
+}

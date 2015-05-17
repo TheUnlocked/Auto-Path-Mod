@@ -1,0 +1,15 @@
+# Configuration file
+
+ {
+    # when triggered to trample material, the chance that it is actually trampled [range: 0.0 ~ 100.0, default: 10.0]
+    S:"Trample Chance"=10.0
+
+    # used to set what blocks turn into what other blocks when trampled. use the format 'modid:blockname -> modid:blockname' where the first block is the original and the second block is the trampled [default: [minecraft:grass -> minecraft:dirt], [minecraft:sand -> minecraft:sandstone]]
+    S:"Trample results" <
+        minecraft:grass -> minecraft:dirt
+        minecraft:sand -> minecraft:sandstone
+        minecraft:dirt -> minecraft:hardened_clay
+     >
+}
+
+
