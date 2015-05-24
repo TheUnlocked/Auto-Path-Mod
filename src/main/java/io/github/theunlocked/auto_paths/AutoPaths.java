@@ -41,6 +41,7 @@ import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
@@ -70,17 +71,10 @@ public class AutoPaths
 
         config.load();
 
-        trampleChance = 1f - (config.getFloat("Trample Chance", "AutoPaths Config", 10f, 0f, 100f, "when triggered to trample material, the chance that it is actually trampled") / 100f);
+        trampleChance = 1f - (config.getFloat("Trample Chance", "AutoPaths Config", 20f, 0f, 100f, "when triggered to trample material, the chance that it is actually trampled") / 100f);
         trample = config.getStringList("Trample results", "AutoPaths Config", new String[]{"minecraft:grass->minecraft:dirt", "minecraft:sand->minecraft:sandstone"},
         		"used to set what blocks turn into what other blocks when trampled. use the format 'modid:blockname->modid:blockname' where the first block is the original and the second block is the trampled");        
         config.save();
-        
-        for(String str : trample){
-        	String[] sepStr = str.split("->");
-        	Block from = GameRegistry.findBlock(new GameRegistry.UniqueIdentifier(sepStr[0]).modId, new GameRegistry.UniqueIdentifier(sepStr[0]).name);
-        	Block to = GameRegistry.findBlock(new GameRegistry.UniqueIdentifier(sepStr[1]).modId, new GameRegistry.UniqueIdentifier(sepStr[1]).name);
-        	TrampleHandler.blockSwitch.put(from, to);
-        }
         
         MinecraftForge.EVENT_BUS.register(new TrampleHandler());
         TrampleHandler.preInit();
@@ -91,13 +85,40 @@ public class AutoPaths
     @EventHandler
     public void init(FMLInitializationEvent event)
     {
-    	
     	proxy.registerRenderInformation();
+    	
+    	for(String str : trample){
+        	String[] sepStr = str.split("->");
+        	Block from = GameRegistry.findBlock(new GameRegistry.UniqueIdentifier(sepStr[0]).modId, new GameRegistry.UniqueIdentifier(sepStr[0]).name);
+        	Block to = GameRegistry.findBlock(new GameRegistry.UniqueIdentifier(sepStr[1]).modId, new GameRegistry.UniqueIdentifier(sepStr[1]).name);
+        	TrampleHandler.blockSwitch.put(from, to);
+        	/*String fromMeta;
+        	String toMeta;
+        	if (sepStr[0].split("|")[1] != null){
+        		fromMeta = sepStr[0].split("|")[1];
+        	}
+        	else{
+        		fromMeta = "0";
+        	}
+        	if (sepStr[1].split("|")[1] != null){
+        		toMeta = sepStr[1].split("|")[1];
+        	}
+        	else{
+        		toMeta = "0";
+        	}
+        	TrampleHandler.metaSwitch.put(from,Integer.parseInt(fromMeta));
+        	TrampleHandler.metaSwitch.put(to,Integer.parseInt(toMeta));*/
+        }
+    }
+    
+    public void postInit(FMLPostInitializationEvent event){
+    	
     }
     
     @EventHandler
     public void load(FMLLoadEvent event)
     {
+    	
     }
 	public AutoPaths(){
 		

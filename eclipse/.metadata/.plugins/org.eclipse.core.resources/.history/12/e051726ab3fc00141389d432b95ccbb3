@@ -1,9 +1,0 @@
-package io.github.theunlocked.stuff_things.lib;
-
-public class ProxyCommon {
-	
-	public void registerRenderInformation(){
-		
-	}
-
-}

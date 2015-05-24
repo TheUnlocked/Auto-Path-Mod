@@ -1,0 +1,1 @@
+2015-05-24 06:38:51,457 [main] WARN  o.e.r.i.c.r.ChainCompletionProposalComputer - Can't handle %s as source for finding entrypoints.

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="io.github.theunlocked.auto_paths.lib.BlockVectorPoint"/>
+<fullyQualifiedTypeName name="io.github.theunlocked.auto_paths.lib.References"/>
+<fullyQualifiedTypeName name="io.github.theunlocked.auto_paths.lib.ProxyCommon"/>
+<fullyQualifiedTypeName name="cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier"/>
+<fullyQualifiedTypeName name="cpw.mods.fml.common.event.FMLPostInitializationEvent"/>
+<fullyQualifiedTypeName name="net.minecraft.item.ItemStack"/>
+</qualifiedTypeNameHistroy>

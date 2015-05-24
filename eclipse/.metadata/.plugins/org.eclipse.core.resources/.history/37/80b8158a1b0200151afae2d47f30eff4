@@ -1,0 +1,63 @@
+package io.github.theunlocked.auto_paths;
+
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+import io.github.theunlocked.auto_paths.lib.BlockVectorPoint;
+import io.netty.buffer.ByteBuf;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.common.network.NetworkRegistry;
+import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
+import cpw.mods.fml.common.network.simpleimpl.MessageContext;
+import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import cpw.mods.fml.common.registry.GameRegistry;
+
+public class BlockChanged implements IMessage {
+    
+    private BlockVectorPoint bvp;
+    private Block block;
+    private int meta;
+
+    public BlockChanged() { }
+
+    public BlockChanged(BlockVectorPoint bvp, Block block, int meta) {
+        this.bvp = bvp;
+        this.block = block;
+        this.meta = meta;
+    }
+
+    @Override
+    public void fromBytes(ByteBuf buf) {
+    	String compressedBvp = ByteBufUtils.readUTF8String(buf);
+    	String[] decompressedBvp = compressedBvp.split("//");
+    	World world = null;
+    	for (World w : MinecraftServer.getServer().worldServers)
+    		if (w.getWorldInfo().getWorldName().equals(decompressedBvp[0])){
+    			world = w;
+    			break;
+    		}
+    	if (world == null) world = MinecraftServer.getServer().getEntityWorld();
+    	bvp = new BlockVectorPoint(world,
+    			Integer.parseInt(decompressedBvp[1]), Integer.parseInt(decompressedBvp[2]), Integer.parseInt(decompressedBvp[3]));
+    	block = GameRegistry.findBlock(new GameRegistry.UniqueIdentifier(decompressedBvp[4]).modId, new GameRegistry.UniqueIdentifier(decompressedBvp[4]).name);
+    	meta = Integer.parseInt(decompressedBvp[5]);
+    }
+
+    @Override
+    public void toBytes(ByteBuf buf) {
+        ByteBufUtils.writeUTF8String(buf, bvp.world.getWorldInfo().getWorldName() + "//" + bvp.x + "//" + bvp.y + "//" + bvp.z + "//" + GameRegistry.findUniqueIdentifierFor(block) + "//" + meta);
+        
+    }
+
+    public static class Handler implements IMessageHandler<BlockChanged, IMessage> {
+        
+        @Override
+        public IMessage onMessage(BlockChanged message, MessageContext ctx) {
+        	message.bvp.setBlock(message.bvp, message.block);
+        	message.bvp.world.setBlockMetadataWithNotify(message.bvp.x, message.bvp.y, message.bvp.z, meta, p_72921_5_)
+            return null;
+        }
+    }
+}
